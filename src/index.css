@@ -1,0 +1,333 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+* {
+  font-family: "Poppins", "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+code, pre, .font-mono, [class*="font-mono"], [class*="text-[10px]"][class*="font-mono"] {
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace !important;
+}
+
+/* ==========================================================================
+   LIGHT MODE: SOLID WHITE CARDS & #F8FAFC BACKGROUND
+   ========================================================================== */
+.theme-light {
+  background-color: #F8FAFC !important;
+  color: #1E293B !important;
+}
+
+/* Force light mode background for the portal and elements */
+.theme-light,
+.theme-light #dashboard-portal-root,
+.theme-light #landing-root {
+  background-color: #F8FAFC !important;
+}
+
+/* Force all card elements matching core Tailwind background classes to be solid white */
+.theme-light [class*="bg-slate-950"],
+.theme-light [class*="bg-slate-900"],
+.theme-light [class*="bg-slate-800"],
+.theme-light [class*="bg-[#111827]"],
+.theme-light [class*="bg-emerald-950"],
+.theme-light [class*="bg-amber-950"],
+.theme-light [class*="bg-red-950"],
+.theme-light [class*="bg-purple-950"],
+.theme-light [class*="bg-cyan-950"],
+.theme-light [class*="bg-indigo-950"] {
+  background-color: #FFFFFF !important;
+  border-color: #E2E8F0 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Ensure common tailwind transparency classes are overridden to solid white in light mode */
+.theme-light .bg-slate-900\/40,
+.theme-light .bg-slate-900\/50,
+.theme-light .bg-slate-900\/80,
+.theme-light .bg-slate-950\/40,
+.theme-light .bg-slate-950\/55,
+.theme-light .bg-slate-950\/60,
+.theme-light .bg-slate-950\/70,
+.theme-light .bg-slate-950\/75,
+.theme-light .bg-slate-950\/80,
+.theme-light .bg-slate-950\/85,
+.theme-light .bg-slate-950\/90,
+.theme-light .bg-\[\#111827\]\/80 {
+  background-color: #FFFFFF !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Solid white sidebars and header in light mode */
+.theme-light header,
+.theme-light aside {
+  background-color: #FFFFFF !important;
+  border-color: #E2E8F0 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Support correct slate/zinc text colors inside light theme */
+.theme-light .text-white,
+.theme-light .text-gray-100,
+.theme-light .text-gray-150,
+.theme-light .text-gray-200,
+.theme-light .text-gray-250,
+.theme-light .text-gray-300,
+.theme-light .text-gray-350,
+.theme-light h1, .theme-light h2, .theme-light h3, .theme-light h4, .theme-light h5, .theme-light h6 {
+  color: #0F172A !important;
+}
+
+.theme-light .text-gray-400,
+.theme-light .text-gray-450,
+.theme-light .text-slate-300,
+.theme-light .text-gray-350,
+.theme-light .text-slate-400 {
+  color: #475569 !important;
+}
+
+.theme-light .text-gray-550,
+.theme-light .text-gray-500 {
+  color: #64748B !important;
+}
+
+/* Border matching in theme-light */
+.theme-light [class*="border-gray-"],
+.theme-light [class*="border-slate-"],
+.theme-light [class*="border-cyan-"],
+.theme-light .border-b,
+.theme-light .border-r,
+.theme-light .border-t,
+.theme-light .border-l,
+.theme-light .border {
+  border-color: #E2E8F0 !important;
+}
+
+/* Force light input styles to stand out elegantly */
+.theme-light input, 
+.theme-light select, 
+.theme-light textarea {
+  background-color: #FFFFFF !important;
+  color: #1E293B !important;
+  border-color: #CBD5E1 !important;
+}
+
+.theme-light input:focus, 
+.theme-light select:focus, 
+.theme-light textarea:focus {
+  border-color: #4F46E5 !important;
+}
+
+/* Badge colors inside Light mode styled with light backgrounds and dark text */
+.theme-light .bg-emerald-950\/30,
+.theme-light [class*="bg-emerald-"] {
+  background-color: #D1FAE5 !important;
+  color: #065F46 !important;
+}
+.theme-light .bg-amber-950\/30,
+.theme-light [class*="bg-amber-"] {
+  background-color: #FEF3C7 !important;
+  color: #92400E !important;
+}
+.theme-light .bg-red-950\/30,
+.theme-light [class*="bg-red-"] {
+  background-color: #FEE2E2 !important;
+  color: #991B1B !important;
+}
+.theme-light .bg-purple-950\/30,
+.theme-light [class*="bg-purple-"] {
+  background-color: #F3E8FF !important;
+  color: #6B21A8 !important;
+}
+.theme-light .bg-cyan-950\/20,
+.theme-light .bg-cyan-950\/30,
+.theme-light [class*="bg-cyan-"] {
+  background-color: #ECFEFF !important;
+  color: #155E75 !important;
+}
+
+/* ==========================================================================
+   DARK MODE: GITHUB COLOR PALETTE
+   ========================================================================== */
+.theme-dark {
+  background-color: #0D1117 !important;
+  color: #C9D1D9 !important;
+}
+
+/* Force GitHub dark theme backgrounds for layout bounds */
+.theme-dark,
+.theme-dark #dashboard-portal-root,
+.theme-dark #landing-root {
+  background-color: #0D1117 !important;
+}
+
+/* Force card elements matching background classes to be solid GitHub Gray (#161B22) */
+.theme-dark [class*="bg-slate-950"],
+.theme-dark [class*="bg-slate-900"],
+.theme-dark [class*="bg-slate-800"],
+.theme-dark [class*="bg-[#111827]"],
+.theme-dark [class*="bg-emerald-950"],
+.theme-dark [class*="bg-amber-950"],
+.theme-dark [class*="bg-red-950"],
+.theme-dark [class*="bg-purple-950"],
+.theme-dark [class*="bg-cyan-950"],
+.theme-dark [class*="bg-indigo-950"] {
+  background-color: #161B22 !important;
+  border-color: #30363D !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* For nested or general layout cards containing alpha transparent rules */
+.theme-dark .bg-slate-900\/40,
+.theme-dark .bg-slate-900\/50,
+.theme-dark .bg-slate-900\/80,
+.theme-dark .bg-slate-950\/40,
+.theme-dark .bg-slate-950\/55,
+.theme-dark .bg-slate-950\/60,
+.theme-dark .bg-slate-950\/70,
+.theme-dark .bg-slate-950\/75,
+.theme-dark .bg-slate-950\/80,
+.theme-dark .bg-slate-950\/85,
+.theme-dark .bg-slate-950\/90,
+.theme-dark .bg-\[\#111827\]\/80 {
+  background-color: #161B22 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* GitHub Dark Theme headers and sidebars */
+.theme-dark header,
+.theme-dark aside {
+  background-color: #161B22 !important;
+  border-color: #30363D !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Match clean GitHub borders (#30363D) for lines and panels */
+.theme-dark [class*="border-gray-"],
+.theme-dark [class*="border-slate-"],
+.theme-dark [class*="border-cyan-"],
+.theme-dark .border-b,
+.theme-dark .border-r,
+.theme-dark .border-t,
+.theme-dark .border-l,
+.theme-dark .border {
+  border-color: #30363D !important;
+}
+
+/* Ensure clean GitHub styled input components */
+.theme-dark input,
+.theme-dark select,
+.theme-dark textarea {
+  background-color: #0D1117 !important;
+  color: #C9D1D9 !important;
+  border-color: #30363D !important;
+}
+
+/* Force GitHub focus style input line */
+.theme-dark input:focus,
+.theme-dark select:focus,
+.theme-dark textarea:focus {
+  border-color: #58A6FF !important;
+}
+
+/* High contrast text definitions conforming to GitHub standard palette */
+.theme-dark h1,
+.theme-dark h2,
+.theme-dark h3,
+.theme-dark h4,
+.theme-dark h5,
+.theme-dark h6,
+.theme-dark .text-white,
+.theme-dark .text-gray-100,
+.theme-dark .text-gray-150,
+.theme-dark .text-gray-200,
+.theme-dark .text-gray-250,
+.theme-dark .text-gray-300,
+.theme-dark .text-gray-355,
+.theme-dark .text-gray-350 {
+  color: #F0F6FC !important;
+}
+
+/* Dim text selection */
+.theme-dark .text-gray-400,
+.theme-dark .text-gray-450,
+.theme-dark .text-slate-300,
+.theme-dark .text-gray-350,
+.theme-dark .text-slate-400 {
+  color: #8B949E !important;
+}
+
+/* Low emphasis metadata */
+.theme-dark .text-gray-550,
+.theme-dark .text-gray-500 {
+  color: #484F58 !important;
+}
+
+/* Dynamic brand colors to GitHub Theme highlights */
+.theme-dark .text-cyan-400,
+.theme-dark .text-cyan-350,
+.theme-dark .text-cyan-300,
+.theme-dark .text-indigo-600 {
+  color: #58A6FF !important;
+}
+
+.theme-dark .text-purple-400,
+.theme-dark .text-purple-300 {
+  color: #BC8CFF !important;
+}
+
+.theme-dark .text-emerald-400,
+.theme-dark .text-emerald-300 {
+  color: #3FB950 !important;
+}
+
+/* GitHub themed badges */
+.theme-dark .bg-emerald-950\/30 {
+  background-color: rgba(46, 160, 67, 0.15) !important;
+  color: #3FB950 !important;
+}
+.theme-dark .bg-amber-950\/30 {
+  background-color: rgba(210, 153, 34, 0.15) !important;
+  color: #D29922 !important;
+}
+.theme-dark .bg-red-950\/30 {
+  background-color: rgba(248, 81, 73, 0.15) !important;
+  color: #F85149 !important;
+}
+.theme-dark .bg-purple-950\/30 {
+  background-color: rgba(188, 140, 255, 0.15) !important;
+  color: #BC8CFF !important;
+}
+.theme-dark .bg-cyan-950\/20,
+.theme-dark .bg-cyan-950\/30 {
+  background-color: rgba(56, 139, 253, 0.1) !important;
+  color: #58A6FF !important;
+}
+
+/* Elegant 90% Scale-Down for larger desktop formats */
+@media (min-width: 1024px) {
+  html, body {
+    zoom: 0.90 !important;
+  }
+}
+
+/* Eliminate white background artifacts at bottom of scaled viewports */
+html {
+  background-color: #0D1117 !important;
+}
+html:has(.theme-light) {
+  background-color: #F8FAFC !important;
+}
+html:has(.theme-dark) {
+  background-color: #0D1117 !important;
+}

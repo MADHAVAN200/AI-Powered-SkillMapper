@@ -1,0 +1,6 @@
+{
+  "name": "AI Powered Skill Mapper",
+  "description": "An intelligent career analytics and learning roadmap platform using Gemini AI to identify skill gaps, optimize resumes, and prepare for interviews.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
