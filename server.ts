@@ -10,7 +10,8 @@ dotenv.config();
 const app = express();
 const PORT = 3000;
 
-app.use(express.json());
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 // Auto-provision user record to satisfy foreign key relationships in sandbox mode
 async function ensureUserExists(userId: string) {
@@ -2648,6 +2649,90 @@ app.post("/api/update-progress", async (req, res) => {
     });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// ==========================================================
+// RESUME FILE PARSER ENDPOINT
+// Accepts base64-encoded file content and extracts raw resume text via AI
+// ==========================================================
+app.post("/api/parse-resume", async (req, res) => {
+  try {
+    const { fileBase64, fileName, fileType } = req.body;
+    if (!fileBase64 || !fileName) {
+      return res.status(400).json({ error: "Missing fileBase64 or fileName." });
+    }
+
+    const useRealAi = !!(process.env.GROQ_API_KEY || process.env.GEMINI_API_KEY);
+
+    // For plain text files, decode and return directly
+    if (fileType === "text/plain" || fileName.toLowerCase().endsWith(".txt")) {
+      const decoded = Buffer.from(fileBase64, "base64").toString("utf-8");
+      return res.json({ extractedText: decoded.trim() });
+    }
+
+    if (!useRealAi) {
+      // Without AI, return a message asking user to paste text manually
+      return res.json({
+        extractedText: "",
+        warning: "AI API key not configured. Please paste your resume text manually in the text area below."
+      });
+    }
+
+    // Use Gemini multimodal if PDF, otherwise decode and send as text
+    const geminiKey = process.env.GEMINI_API_KEY;
+    if (geminiKey && (fileType === "application/pdf" || fileName.toLowerCase().endsWith(".pdf"))) {
+      // Use Gemini vision to extract text from PDF
+      const ai = getGeminiClient();
+      const response = await ai.models.generateContent({
+        model: "gemini-2.0-flash",
+        contents: [
+          {
+            role: "user",
+            parts: [
+              {
+                inlineData: {
+                  mimeType: "application/pdf",
+                  data: fileBase64
+                }
+              },
+              {
+                text: `Extract ALL text content from this resume PDF exactly as written. 
+Include: name, contact info, education, work experience (company names, roles, dates, bullet points), skills, projects, certifications, and any other sections.
+Do NOT summarize or paraphrase - extract the full verbatim text.
+Return only the extracted text, no JSON wrapping, no markdown.`
+              }
+            ]
+          }
+        ]
+      });
+      const extractedText = response.text?.trim() || "";
+      return res.json({ extractedText });
+    }
+
+    // For DOCX or other formats: attempt to decode as UTF-8 text (basic extraction)
+    // and use LLM to clean and structure it
+    let rawContent = "";
+    try {
+      rawContent = Buffer.from(fileBase64, "base64").toString("utf-8");
+    } catch {
+      rawContent = "[Binary file - could not decode as text]";
+    }
+
+    const prompt = `The following is raw file content extracted from a resume document (${fileName}).
+Clean and extract all meaningful resume text from it. 
+Include: candidate name, contact details, education, work experience, skills, projects, and certifications.
+If the content appears corrupted or binary, return an empty string.
+Return ONLY the clean extracted resume text with no JSON, no markdown formatting.
+
+RAW CONTENT:
+${rawContent.slice(0, 8000)}`;
+
+    const extracted = await callLlm(prompt, false);
+    return res.json({ extractedText: extracted.trim() });
+  } catch (err: any) {
+    console.error("Resume parse error:", err);
+    res.status(500).json({ error: err.message || "Resume parsing failed." });
   }
 });
 
