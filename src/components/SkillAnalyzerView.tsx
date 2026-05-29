@@ -130,10 +130,10 @@ export default function SkillAnalyzerView({ results: propResults, onImportSkills
   }, [skillsList, selectedRole]);
 
   // Trigger server-side engine updates for high-fidelity evaluation
-  const triggerEngineAnalysis = async (customSkills?: SkillItem[]) => {
+  const triggerEngineAnalysis = async (customSkills?: SkillItem[] | any) => {
     setIsUpdatingEngine(true);
     try {
-      const activeSkills = customSkills || skillsList;
+      const activeSkills = Array.isArray(customSkills) ? customSkills : skillsList;
       const knownNames = activeSkills.map(s => s.name);
       
       // 1. Analyze Skills Category & Proficiency matrix

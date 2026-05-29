@@ -17,13 +17,10 @@ import {
   AlertCircle,
   X,
   RefreshCw,
-  FolderSync,
-  Bug,
   Bell,
   Sun,
   Moon,
-  Menu,
-  Database
+  Menu
 } from "lucide-react";
 import { ProfileMappingResults } from "./types";
 
@@ -74,7 +71,7 @@ export default function App() {
   const [name, setName] = useState("");
   const [degree, setDegree] = useState("");
   const [experienceLevel, setExperienceLevel] = useState("Junior (1-2 Years)");
-  const [careerGoal, setCareerGoal] = useState("AI Software Engineer");
+  const [careerGoal, setCareerGoal] = useState("");
   const [skillsInput, setSkillsInput] = useState("");
   const [skillsList, setSkillsList] = useState<string[]>([]);
   const [resumeText, setResumeText] = useState("");
@@ -110,26 +107,48 @@ export default function App() {
     }
   };
 
-  const processFile = (file: File) => {
+  const processFile = async (file: File) => {
     setUploadState("uploading");
     setUploadedFileName(file.name);
-    
-    setTimeout(() => {
-      if (file.name.endsWith(".txt")) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const text = event.target?.result as string;
-          setResumeText(text);
-          setUploadState("success");
-        };
-        reader.readAsText(file);
-      } else {
-        // High fidelity automatic extraction simulation
-        const mockExtractedText = `Candidate Name: ${name || "Applicant"}\nFile Name: ${file.name}\nSize: ${(file.size / 1024).toFixed(1)} KB\nType: ${file.type || "application/pdf"}\n\nEXPERIENCE SUMMARY:\n- Software Engineer or Developer with solid hands-on engineering background.\n- Active technical stack competencies matching modern scalable cloud architectures.\n- Seeking target role: ${careerGoal || "AI or Full-Stack Engineer"}\n\nPAST PROJECT REPOSITORIES & ROLES:\n- Multi-tier dynamic system deployments with robust PostgreSQL databases.\n- Designed responsive visual modules, integrated custom REST frameworks, and streamlined system components.\n- Conducted diagnostic debugging, performance tracking, and containerized operational testing.`;
-        setResumeText(mockExtractedText);
-        setUploadState("success");
+
+    try {
+      // Convert file to base64
+      const arrayBuffer = await file.arrayBuffer();
+      const bytes = new Uint8Array(arrayBuffer);
+      let binary = "";
+      for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
       }
-    }, 1000);
+      const fileBase64 = btoa(binary);
+
+      // Call server to extract text
+      const resp = await fetch("/api/parse-resume", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fileBase64,
+          fileName: file.name,
+          fileType: file.type
+        })
+      });
+
+      if (!resp.ok) throw new Error("Server could not parse resume.");
+      const data = await resp.json();
+
+      if (data.warning) {
+        // No AI key - show warning, leave text area empty for manual paste
+        setResumeText("");
+        setAnalysisError(data.warning);
+      } else {
+        setResumeText(data.extractedText || "");
+        setAnalysisError("");
+      }
+      setUploadState("success");
+    } catch (err: any) {
+      console.error("File parse error:", err);
+      setUploadState("idle");
+      setAnalysisError("Could not read file. Please paste your resume text manually.");
+    }
   };
 
   const popularSkills = [
@@ -181,296 +200,101 @@ export default function App() {
   const checkAndPullProfile = async (activeUser: any) => {
     setCheckingCloudAuth(true);
     try {
-      const defaultProfile: OnboardingProfile = {
-        name: activeUser.raw_user_meta_data?.name || activeUser.user_metadata?.name || activeUser.email?.split("@")[0] || "Active Candidate",
-        degree: "B.Tech Computer Science & AI Systems",
-        experienceLevel: "Junior (1-2 Years)",
-        careerGoal: "Senior AI Systems Engineer",
-        knownSkills: ["Python", "TypeScript", "React", "Docker", "Node.js", "SQL"],
-        resumeText: "Experienced Junior Developer with a solid foundation in building high-performance Type-Safe pipelines, microservice setups, automated CI/CD deployments, and advanced React dashboards. Adept at implementing vector search architectures."
-      };
+      const userId = activeUser.id || "guest-user";
+      const isGuestOnly = userId === "guest-user";
 
-      const defaultResults: ProfileMappingResults = {
-        skills: [
-          { name: "TypeScript", category: "Programming", proficiency: 85, description: "Highly proficient in type safety, advanced generics, and modular frontend architectures." },
-          { name: "Python", category: "Programming", proficiency: 90, description: "Experienced in building FastAPI servers and data engineering neural networks." },
-          { name: "Docker", category: "Cloud", proficiency: 75, description: "Containerized modern multi-tier deployments with microservices." },
-          { name: "React", category: "Programming", proficiency: 80, description: "Expert in building complex states, interactive radar visualizations, and SPA metrics." },
-          { name: "Node.js", category: "Programming", proficiency: 75, description: "Developed clean express gateways, token authentications, and middleware routers." },
-          { name: "SQL", category: "Databases", proficiency: 80, description: "Relational developer with hands-on skill in complex queries and indexing schemas." }
-        ],
-        skillGaps: [
-          { skillName: "MLOps", priority: "High", whyNeeded: "Industrial systems require hands-on deployment of neural models and weights tracking." },
-          { skillName: "Kubernetes", priority: "Medium", whyNeeded: "Essential for scaling large-scale real-time ingestion pipelines across container nodes." }
-        ],
-        careerPaths: [
-          { title: "Senior AI Engineer", matchScore: 88, salaryRange: "₹18L - ₹32L", marketDemand: "Very High", description: "Design systems incorporating vector databases, RAG patterns, and live fine-tuning loops." },
-          { title: "Full Stack Engineer", matchScore: 94, salaryRange: "₹12L - ₹24L", marketDemand: "High", description: "Orchestrate responsive client dashboards aligned with secure, containerized Express/FastAPI backends." }
-        ],
-        resumeAnalysis: {
-          atsScore: 84,
-          strengths: ["Strong technical capability stack", "Solid understanding of containerization and modern backend paradigms"],
-          improvements: ["Incorporate empirical metrics (e.g., 'Optimized response speed by 35%')", "Highlight systems monitoring expertise"],
-          formattingScore: 92,
-          keywordCompleteness: 81,
-          atsFeedback: "Your layout is extremely high quality. To elevate callback performance, ensure you mention cloud monitoring tools or metrics."
-        },
-        learningRoadmap: [
-          {
-            phaseNumber: 1,
-            title: "Phase 1: Local Setup, Control Systems & Architecture Foundations",
-            topics: [
-              { 
-                name: "Git & Collaborative Dev Workflows", 
-                difficulty: "Beginner", 
-                estimatedTime: "1 week",
-                description: "Master absolute code-safety standards: merge conflict resolutions, modular branch isolations, trunk-based developments, and structural repositories push/pull protocols."
-              },
-              { 
-                name: "Object-Oriented Design & Structural Design Patterns", 
-                difficulty: "Medium", 
-                estimatedTime: "1-2 weeks",
-                description: "Deep dive into production-grade systems design: compile clean modular code templates, construct decouplers to decouple business models, and eliminate nested repetitive code systems."
-              },
-              { 
-                name: "Docker Container Configurations & Isolations", 
-                difficulty: "Beginner", 
-                estimatedTime: "1 week",
-                description: "Authorize clean multi-tier execution environments: formulate multi-stage Dockerfiles caching asset layers, configure port bindings, and map host volume storage systems."
-              }
-            ],
-            recommendedCourses: [
-              { name: "Git & Version Control Mastery", platform: "YouTube / Google Career", type: "Course" },
-              { name: "Docker Fundamentals for Modern Teams", platform: "Udemy", type: "Course" }
-            ],
-            projects: [
-              { 
-                title: "Decoupled Containerized Gateway Router", 
-                description: "Build an isolated network proxy utilizing multi-stage containers, routing traffic across multiple backend simulated instances seamlessly.", 
-                skillsUtilized: ["Docker", "Git", "Shell Scripts", "Node.js"] 
-              }
-            ]
-          },
-          {
-            phaseNumber: 2,
-            title: "Phase 2: Full-Stack Integration, API Design & Data Ingestion",
-            topics: [
-              { 
-                name: "Automated API Contracts & Type-Safe Valider Schemas", 
-                difficulty: "Medium", 
-                estimatedTime: "1 week",
-                description: "Define rigid request-response schemas: inject strict runtime body/query validations, prevent unauthorized input intrusions, and architect robust REST/GraphQL responses."
-              },
-              { 
-                name: "Deep-Dive MLOps Tracking & Binary Model Registries", 
-                difficulty: "Medium", 
-                estimatedTime: "1-2 weeks",
-                description: "Set up central monitoring environments: hook up live MLflow servers to trace training parameters, compare accuracy loss indices, and archive weights binaries safely."
-              },
-              { 
-                name: "Redis Systems & Background Asynchronous Queue Handlers", 
-                difficulty: "Medium", 
-                estimatedTime: "1 week",
-                description: "Learn to offload intensive computing logic: integrate Redis in-memory tables to cache active application databases and manage non-blocking worker pools."
-              }
-            ],
-            recommendedCourses: [
-              { name: "API Security & Schema Design Best Practices", platform: "edX", type: "Course" },
-              { name: "MLOps Professional Certification", platform: "Coursera", type: "Certification" }
-            ],
-            projects: [
-              { 
-                title: "Live ML Model Parameter Pipeline Tracker", 
-                description: "Integrate a central system capturing model runs and displaying performance reports in live gauges using Node/Python adapters.", 
-                skillsUtilized: ["MLflow", "Redis", "TypeScript", "Python"] 
-              }
-            ]
-          },
-          {
-            phaseNumber: 3,
-            title: "Phase 3: Production Automation, Cloud Clusters & Real-time Observability",
-            topics: [
-              { 
-                name: "Industrial CI/CD Pipeline Automation & Automated Testing", 
-                difficulty: "Medium", 
-                estimatedTime: "1 week",
-                description: "Enforce error-free main branch stability: script custom GitHub Workflows validating type signatures and launching unit/integration test routines on every commit."
-              },
-              { 
-                name: "Kubernetes Orchestration & Scalable Multi-Node Clusters", 
-                difficulty: "Hard", 
-                estimatedTime: "2 weeks",
-                description: "Deploy self-repairing production setups: orchestrate YAML pods, set auto-scaling thresholds defending against traffic spikes, and mount load-balancing networks."
-              },
-              { 
-                name: "Advanced Observability, Error Tracking & Alerts Monitoring", 
-                difficulty: "Hard", 
-                estimatedTime: "1 week",
-                description: "Ensure five-nines system availability: set up dashboards graphing telemetry indexes, system memory leaks, live API latencies, and transaction logs on failure."
-              }
-            ],
-            recommendedCourses: [
-              { name: "Kubernetes Deep Dive - Scaling Modern Architectures", platform: "Udemy", type: "Course" },
-              { name: "SRE Foundations & Monitoring", platform: "Coursera", type: "Course" }
-            ],
-            projects: [
-              { 
-                title: "High-Availability Multi-Node SRE Simulation CAPSTONE", 
-                description: "Deliver a robust Kubernetes cluster hosting a fault-tolerant web server integrated with automated health checks, alarms, and Slack messaging integrations.", 
-                skillsUtilized: ["Kubernetes", "Prometheus", "GitHub Actions", "Terraform"] 
-              }
-            ]
-          }
-        ]
-      };
-
-      if (activeUser.id === "guest-user" || activeUser.guest || activeUser.is_local || activeUser.id.startsWith("local-")) {
-        const userId = activeUser.id || "guest-user";
-        const isGuestOnly = userId === "guest-user";
-
-        let savedProfile = isGuestOnly 
-          ? localStorage.getItem("skill_mapper_guest_user_profile")
-          : localStorage.getItem(`skill_mapper_user_profile_${userId}`);
-
-        let savedResults = isGuestOnly 
-          ? localStorage.getItem("skill_mapper_guest_analysis_results")
-          : localStorage.getItem(`skill_mapper_analysis_results_${userId}`);
-
-        if (savedProfile && savedResults) {
-          try {
-            const parsedResults = JSON.parse(savedResults);
-            // Check if the learning roadmap contains stale topics or is missing detailed descriptions
-            const isMissingDescriptions = !parsedResults.learningRoadmap || parsedResults.learningRoadmap.some((phase: any) => 
-              !phase.topics || phase.topics.some((topic: any) => !topic.description)
-            );
-
-            if (isMissingDescriptions) {
-              console.log("Upgraded stale roadmap to highly detailed professional syllabus.");
-              const key = isGuestOnly ? "skill_mapper_guest_analysis_results" : `skill_mapper_analysis_results_${userId}`;
-              localStorage.setItem(key, JSON.stringify(defaultResults));
-              setResults(defaultResults);
-            } else {
-              setResults(parsedResults);
-            }
-          } catch (err) {
-            setResults(defaultResults);
-          }
-          setUserProfile(JSON.parse(savedProfile));
-          setIsOnboarding(false);
-          setActiveTab("dashboard");
-        } else {
-          // Auto-seed local session to provide immediate functional content
-          console.log(`Seeding fresh demo data to local storage for local sandbox user: ${userId}...`);
-          const profKey = isGuestOnly ? "skill_mapper_guest_user_profile" : `skill_mapper_user_profile_${userId}`;
-          const resKey = isGuestOnly ? "skill_mapper_guest_analysis_results" : `skill_mapper_analysis_results_${userId}`;
-
-          localStorage.setItem(profKey, JSON.stringify(defaultProfile));
-          localStorage.setItem(resKey, JSON.stringify(defaultResults));
-
-          setUserProfile(defaultProfile);
-          setResults(defaultResults);
-          setIsOnboarding(false);
-          setActiveTab("dashboard");
-        }
-        return;
-      }
-
-      // 1. Fetch user profile from Supabase
-      const { data: profileCheck, error: profileError } = await supabase
-        .from("user_profiles")
-        .select("*")
-        .eq("id", activeUser.id)
-        .single();
-      
-      // PGRST116 means no row found, which is normal for brand new users
-      if (profileError && profileError.code !== "PGRST116") {
-        console.warn("Could not retrieve profile from cloud:", profileError);
-      }
-
-      // 2. Fetch mapping results from Supabase
-      const { data: resultsCheck, error: resultsError } = await supabase
-        .from("mapping_results")
-        .select("*")
-        .eq("user_id", activeUser.id)
-        .order("created_at", { ascending: false })
-        .limit(1);
-
-      if (resultsError) {
-        console.warn("Could not retrieve results from cloud:", resultsError);
-      }
-
-      if (profileCheck && resultsCheck && resultsCheck.length > 0) {
-        const latestResult = resultsCheck[0];
-        
-        const pulledProfile: OnboardingProfile = {
-          name: profileCheck.name || activeUser.raw_user_meta_data?.name || profileCheck.name || "Active Candidate",
-          degree: profileCheck.degree || "Computer Science",
-          experienceLevel: profileCheck.experience_level || "Junior (1-2 Years)",
-          careerGoal: profileCheck.career_goal || "AI Software Engineer",
-          knownSkills: profileCheck.known_skills || [],
-          resumeText: latestResult.resume_analysis?.raw_resume_text || profileCheck.resume_text || ""
-        };
-
-        const pulledResults: ProfileMappingResults = {
-          skills: latestResult.skills || [],
-          skillGaps: latestResult.skill_gaps || [],
-          careerPaths: latestResult.career_paths || [],
-          resumeAnalysis: latestResult.resume_analysis || {
-            atsScore: 70,
-            strengths: [],
-            improvements: [],
-            formattingScore: 70,
-            keywordCompleteness: 60,
-            atsFeedback: ""
-          },
-          learningRoadmap: latestResult.learning_roadmap || []
-        };
-
-        setUserProfile(pulledProfile);
-        setResults(pulledResults);
-        setIsOnboarding(false);
-        setActiveTab("dashboard");
-      } else {
-        // Logged in but has no cloud database entries.
-        // Auto-seed database dynamically to guarantee Tables are filled and everything looks gorgeous instantly!
-        console.log("Database of active user is empty. Seeding realistic sample assessment mapping into Supabase...");
-        
+      // For registered DB users (non-guest), try fetching from SQLite DB first
+      if (!isGuestOnly) {
         try {
-          // Write sample data to cloud DB
-          const { error: profileErr } = await supabase.from("user_profiles").upsert({
-            id: activeUser.id,
-            name: defaultProfile.name,
-            degree: defaultProfile.degree,
-            experience_level: defaultProfile.experienceLevel,
-            career_goal: defaultProfile.careerGoal,
-            known_skills: defaultProfile.knownSkills,
-            updated_at: new Date().toISOString()
-          });
+          // Fetch profile from DB
+          const { data: profileCheck } = await supabase
+            .from("user_profiles")
+            .select("*")
+            .eq("id", userId)
+            .single();
 
-          if (profileErr) console.error("Auto-seeding error profile:", profileErr);
+          // Fetch latest mapping results
+          const { data: resultsCheck } = await supabase
+            .from("mapping_results")
+            .select("*")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: false })
+            .limit(1);
 
-          const { error: resultsErr } = await supabase.from("mapping_results").insert({
-            user_id: activeUser.id,
-            skills: defaultResults.skills,
-            skill_gaps: defaultResults.skillGaps,
-            career_paths: defaultResults.careerPaths,
-            resume_analysis: defaultResults.resumeAnalysis,
-            learning_roadmap: defaultResults.learningRoadmap
-          });
+          const latestResult = Array.isArray(resultsCheck) ? resultsCheck[0] : resultsCheck;
 
-          if (resultsErr) console.error("Auto-seeding error results:", resultsErr);
+          if (profileCheck && latestResult) {
+            const pulledProfile: OnboardingProfile = {
+              name: profileCheck.name || activeUser.raw_user_meta_data?.name || activeUser.email?.split("@")[0] || "Candidate",
+              degree: profileCheck.degree || "",
+              experienceLevel: profileCheck.experience_level || "Junior (1-2 Years)",
+              careerGoal: profileCheck.career_goal || "",
+              knownSkills: profileCheck.known_skills || [],
+              resumeText: latestResult.resume_analysis?.raw_resume_text || profileCheck.resume_text || ""
+            };
+
+            const pulledResults: ProfileMappingResults = {
+              skills: latestResult.skills || [],
+              skillGaps: latestResult.skill_gaps || [],
+              careerPaths: latestResult.career_paths || [],
+              resumeAnalysis: latestResult.resume_analysis || {
+                atsScore: 0,
+                strengths: [],
+                improvements: [],
+                formattingScore: 0,
+                keywordCompleteness: 0,
+                atsFeedback: ""
+              },
+              learningRoadmap: latestResult.learning_roadmap || []
+            };
+
+            setUserProfile(pulledProfile);
+            setResults(pulledResults);
+            setIsOnboarding(false);
+            setActiveTab("dashboard");
+            return; // Success, stop here!
+          }
         } catch (dbErr) {
-          console.error("Auto-seeding database write failed gracefully:", dbErr);
+          console.warn("Failed to retrieve profile/results from database, checking localStorage fallback:", dbErr);
         }
+      }
 
-        // Apply immediately to local state so user gets routed straight to dashboard
-        setUserProfile(defaultProfile);
-        setResults(defaultResults);
-        setIsOnboarding(false);
-        setActiveTab("dashboard");
+      // LocalStorage Fallback (or pure Guest route)
+      const savedProfile = isGuestOnly
+        ? localStorage.getItem("skill_mapper_guest_user_profile")
+        : localStorage.getItem(`skill_mapper_user_profile_${userId}`);
+
+      const savedResults = isGuestOnly
+        ? localStorage.getItem("skill_mapper_guest_analysis_results")
+        : localStorage.getItem(`skill_mapper_analysis_results_${userId}`);
+
+      if (savedProfile && savedResults) {
+        try {
+          const parsedProfile = JSON.parse(savedProfile);
+          const parsedResults = JSON.parse(savedResults);
+          setUserProfile(parsedProfile);
+          setResults(parsedResults);
+          setIsOnboarding(false);
+          setActiveTab("dashboard");
+        } catch {
+          // Corrupted cache — send to onboarding
+          setIsOnboarding(true);
+          setActiveTab("onboarding");
+        }
+      } else {
+        // No saved data — only force onboarding for non-guests
+        if (isGuestOnly) {
+          setActiveTab("landing");
+          setIsOnboarding(false);
+        } else {
+          setIsOnboarding(true);
+          setActiveTab("onboarding");
+        }
       }
     } catch (err) {
       console.error("Auth sync error:", err);
+      setIsOnboarding(true);
+      setActiveTab("onboarding");
     } finally {
       setCheckingCloudAuth(false);
     }
@@ -613,39 +437,8 @@ export default function App() {
     handleTriggerAnalysis(profileData);
   };
 
-  const handleLoadDemo = async (presetType: "student" | "switcher" | "fresher") => {
-    if (!currentUser) {
-      setActiveTab("auth");
-      return;
-    }
-
-    // Since they are logged in, we populate Onboarding input card state fields!
-    setIsOnboarding(true);
-    setActiveTab("onboarding");
-
-    if (presetType === "student") {
-      setName("Aarav Sharma");
-      setDegree("B.Tech Computer Science (Sophomore)");
-      setExperienceLevel("Entry Level (Fresher)");
-      setCareerGoal("AI Software Engineer & GenAI developer");
-      setSkillsList(["Python", "React", "SQL", "JavaScript", "pandas", "numpy"]);
-      setResumeText("Sophomore undergraduate student. Specialized coursework in core algorithms. Build multiple command line utilities in python and web dashboards using standard tools.");
-    } else if (presetType === "switcher") {
-      setName("Priya Kapoor");
-      setDegree("Marketing & Sales Manager");
-      setExperienceLevel("Mid-Level Professional");
-      setCareerGoal("Data Analyst & Business Systems Architect");
-      setSkillsList(["Excel", "Tableau", "SQL", "Product Strategy"]);
-      setResumeText("Over 4 years managing growth campaigns and regional sales analytics. Cleaned large datasets with excel and coordinate cross-functional sprints. Looking to migrate entirely into heavy SQL and data tooling.");
-    } else {
-      setName("Rohan Das");
-      setDegree("Self-trained Web Developer");
-      setExperienceLevel("Junior (1-2 Years)");
-      setCareerGoal("Full Stack Web Architect");
-      setSkillsList(["HTML/CSS", "JavaScript", "React", "Node.js", "Express"]);
-      setResumeText("Completed high-intensity code-camp curriculum. Engineered 4 custom multi-service websites. Skilled in frontend layouts and state routing, seeking full-stack transition by adopting databases and AWS cloud deployments.");
-    }
-  };
+  // Removed handleLoadDemo — no more mock/demo profiles.
+  // Users must fill in their own real information and upload their resume.
 
   const handleResetSession = () => {
     // Purge local Cache
@@ -843,9 +636,36 @@ export default function App() {
       {activeTab === "landing" && !isOnboarding && (
         <LandingScreen
           onStartOnboarding={handleStartOnboarding}
-          onLoadDemo={handleLoadDemo}
           isDarkMode={isDarkMode}
           onToggleTheme={() => setIsDarkMode(!isDarkMode)}
+          userProfile={userProfile}
+          results={results}
+          onUpdateSession={(pulledProfile, pulledResults) => {
+            setUserProfile(pulledProfile);
+            setResults(pulledResults);
+            setIsOnboarding(false);
+            setActiveTab("dashboard");
+          }}
+          onLoginAsGuest={(guestName) => {
+            const guestUser = {
+              id: "guest-user",
+              email: "guest@skillmapper.local",
+              guest: true,
+              raw_user_meta_data: { name: guestName }
+            };
+            localStorage.setItem("skill_mapper_guest_user", JSON.stringify(guestUser));
+            setCurrentUser(guestUser);
+            checkAndPullProfile(guestUser);
+          }}
+          onLogoutGuest={handleSignOut}
+          onNewUser={() => {
+            setIsOnboarding(true);
+            setActiveTab("onboarding");
+          }}
+          onLoginSuccess={(loggedInUser) => {
+            setCurrentUser(loggedInUser);
+            checkAndPullProfile(loggedInUser);
+          }}
         />
       )}
 
@@ -1193,20 +1013,11 @@ export default function App() {
               {/* Action submits */}
               <div className="pt-2 flex justify-end gap-3">
                 <button
-                  type="button"
-                  onClick={() => handleLoadDemo("student")}
-                  className={`px-4 py-2 border text-xs hover:text-white rounded-xl transition-all font-medium flex items-center gap-1 ${
-                    isDarkMode ? "bg-[#111827] border-gray-800 text-gray-305" : "bg-slate-50 border-slate-205 text-slate-700 hover:bg-slate-100"
-                  }`}
-                >
-                  <FolderSync className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>Interactive Sandbox</span>
-                </button>
-                <button
                   type="submit"
-                  className="px-6 py-2.5 bg-gradient-to-r from-cyan-500 to-purple-600 hover:brightness-110 text-xs font-semibold text-white rounded-xl shadow-xl shadow-cyan-950/10 transition-all flex items-center gap-1.5"
+                  disabled={isAnalyzing}
+                  className="px-6 py-2.5 bg-gradient-to-r from-cyan-500 to-purple-600 hover:brightness-110 text-xs font-semibold text-white rounded-xl shadow-xl shadow-cyan-950/10 transition-all flex items-center gap-1.5 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  <span>Build Skill Map</span>
+                  <span>{isAnalyzing ? "Analyzing..." : "Build My Skill Map"}</span>
                   <ChevronRight className="w-4 h-4 text-white" />
                 </button>
               </div>

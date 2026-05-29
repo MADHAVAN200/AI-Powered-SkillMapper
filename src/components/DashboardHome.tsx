@@ -77,7 +77,7 @@ export default function DashboardHome({ results, onNavigate, isDarkMode }: Dashb
     if (memoSaved) {
       try { setMemoryCount(JSON.parse(memoSaved).length); } catch (e) {}
     } else {
-      setMemoryCount(2); // Fallback to seed
+      setMemoryCount(0);
     }
 
     // Saved analytical insights
@@ -85,7 +85,7 @@ export default function DashboardHome({ results, onNavigate, isDarkMode }: Dashb
     if (insightSaved) {
       try { setInsightCount(JSON.parse(insightSaved).length); } catch (e) {}
     } else {
-      setInsightCount(1); // Fallback to seed
+      setInsightCount(0);
     }
   }, [userId]);
 
@@ -118,7 +118,7 @@ export default function DashboardHome({ results, onNavigate, isDarkMode }: Dashb
   const totalSkillsCount = skills?.length || 0;
   const highPriorityGaps = skillGaps?.filter((g) => g.priority === "High") || [];
   const mediumPriorityGaps = skillGaps?.filter((g) => g.priority === "Medium") || [];
-  const primaryCareerTarget = careerPaths?.[0] || { title: "Target Specialist", matchScore: 80, salaryRange: "$120,000 - $160,000", marketDemand: "High" };
+  const primaryCareerTarget = careerPaths?.[0] || { title: "—", matchScore: 0, salaryRange: "—", marketDemand: "—" };
 
   // Calculate dynamic average readiness index
   // Component scores are: ATS resume score (35%), skills coverage (35%), target career match (30%)

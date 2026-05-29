@@ -1,19 +1,37 @@
 import { useState, useEffect } from "react";
-import { motion } from "motion/react";
-import { Sparkles, Terminal, FileText, Cpu, Compass, BookOpen, LineChart, MessageSquare, Briefcase, ChevronRight, Play, Sun, Moon, Database } from "lucide-react";
-import { ProfileMappingResults } from "../types";
+import { motion, AnimatePresence } from "motion/react";
+import { Sparkles, Terminal, FileText, Cpu, Compass, BookOpen, LineChart, MessageSquare, Briefcase, ChevronRight, Sun, Moon, Database, X } from "lucide-react";
 import { supabase } from "../lib/supabase";
+import SupabaseAuthView from "./SupabaseAuthView";
 
 interface LandingScreenProps {
   onStartOnboarding: () => void;
-  onLoadDemo: (presetType: "student" | "switcher" | "fresher") => void;
   isDarkMode: boolean;
   onToggleTheme: () => void;
+  userProfile: any;
+  results: any;
+  onUpdateSession: (profile: any, results: any) => void;
+  onLoginAsGuest: (username: string) => void;
+  onLogoutGuest: () => void;
+  onNewUser: () => void;
+  onLoginSuccess: (user: any) => void;
 }
 
-export default function LandingScreen({ onStartOnboarding, onLoadDemo, isDarkMode, onToggleTheme }: LandingScreenProps) {
+export default function LandingScreen({ 
+  onStartOnboarding, 
+  isDarkMode, 
+  onToggleTheme, 
+  userProfile, 
+  results, 
+  onUpdateSession, 
+  onLoginAsGuest, 
+  onLogoutGuest, 
+  onNewUser,
+  onLoginSuccess
+}: LandingScreenProps) {
   const [hoveredFeature, setHoveredFeature] = useState<number | null>(null);
   const [supabaseUser, setSupabaseUser] = useState<any>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -44,6 +62,14 @@ export default function LandingScreen({ onStartOnboarding, onLoadDemo, isDarkMod
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const handleStartClick = () => {
+    if (supabaseUser && !supabaseUser.guest && supabaseUser.id !== "guest-user") {
+      onStartOnboarding();
+    } else {
+      setShowAuthModal(true);
+    }
+  };
 
   const features = [
     {
@@ -137,24 +163,13 @@ export default function LandingScreen({ onStartOnboarding, onLoadDemo, isDarkMod
                       : supabaseUser.email}
                 </span>
               </div>
-            ) : (
-              <button
-                onClick={() => onLoadDemo("student")}
-                className={`px-4 py-2 rounded-lg text-xs font-medium transition-all duration-200 border ${
-                  isDarkMode
-                    ? "text-gray-300 hover:text-white bg-slate-900 hover:bg-slate-800 border-gray-800"
-                    : "text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border-slate-205"
-                }`}
-              >
-                Interactive Demo
-              </button>
-            )}
+            ) : null}
             <button
-              onClick={onStartOnboarding}
+              onClick={handleStartClick}
               id="get-started-top-btn"
               className="px-5 py-2 text-xs font-semibold rounded-lg bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white shadow-lg shadow-cyan-500/20 active:scale-95 transition-all"
             >
-              {supabaseUser ? "Launch Map" : "Get Started"}
+              {supabaseUser && !supabaseUser.guest && supabaseUser.id !== "guest-user" ? "Launch Map" : "Get Started"}
             </button>
           </div>
         </div>
@@ -195,60 +210,24 @@ export default function LandingScreen({ onStartOnboarding, onLoadDemo, isDarkMod
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row gap-4 items-center justify-center pt-4">
             <button
-              onClick={onStartOnboarding}
+              onClick={handleStartClick}
               id="start-onboard-btn"
               className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-xl font-semibold shadow-xl shadow-purple-900/20 hover:shadow-cyan-500/10 hover:brightness-110 active:scale-98 transition-all flex items-center justify-center gap-2"
             >
-              <span>Build Real Profile</span>
+              <span>Build My Skill Map</span>
               <ChevronRight className="w-5 h-5 text-white" />
             </button>
-            <div className="relative group w-full sm:w-auto">
-              {/* Dropdown presets */}
-              <button
-                className={`w-full sm:w-auto px-8 py-4 border rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${
-                  isDarkMode
-                    ? "bg-[#111827]/80 backdrop-blur border-slate-850 text-gray-200 hover:text-white hover:bg-[#1f2937]"
-                    : "bg-white border-slate-205 text-slate-700 hover:text-slate-900 hover:bg-slate-50"
-                }`}
-              >
-                <Play className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
-                <span>Try Preset Sandbox</span>
-              </button>
-              <div className={`absolute top-full left-0 right-0 mt-2 border rounded-xl overflow-hidden hidden group-hover:block transition-all shadow-2xl z-20 ${
-                isDarkMode ? "bg-slate-900/95 border-gray-800" : "bg-white border-slate-200"
-              }`}>
-                <button
-                  onClick={() => onLoadDemo("student")}
-                  className={`w-full text-left px-4 py-3 text-xs transition-colors border-b ${
-                    isDarkMode
-                      ? "text-gray-300 hover:bg-cyan-950/30 hover:text-cyan-400 border-gray-800/50"
-                      : "text-slate-750 hover:bg-slate-50 hover:text-cyan-700 border-slate-100"
-                  }`}
-                >
-                  🎓 CS Sophomore Presets (AI Switcher)
-                </button>
-                <button
-                  onClick={() => onLoadDemo("fresher")}
-                  className={`w-full text-left px-4 py-3 text-xs transition-colors border-b ${
-                    isDarkMode
-                      ? "text-gray-300 hover:bg-cyan-950/30 hover:text-cyan-400 border-gray-800/50"
-                      : "text-slate-750 hover:bg-slate-50 hover:text-cyan-700 border-slate-100"
-                  }`}
-                >
-                  💻 Web Developer Presets (Junior Full Stack)
-                </button>
-                <button
-                  onClick={() => onLoadDemo("switcher")}
-                  className={`w-full text-left px-4 py-3 text-xs transition-colors ${
-                    isDarkMode
-                      ? "text-gray-300 hover:bg-cyan-950/30 hover:text-cyan-400"
-                      : "text-slate-750 hover:bg-slate-50 hover:text-cyan-700"
-                  }`}
-                >
-                  🔄 Career Switcher Presets (to Data Science)
-                </button>
-              </div>
-            </div>
+            <a
+              href="#features"
+              className={`w-full sm:w-auto px-8 py-4 border rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${
+                isDarkMode
+                  ? "bg-[#111827]/80 backdrop-blur border-slate-850 text-gray-200 hover:text-white hover:bg-[#1f2937]"
+                  : "bg-white border-slate-205 text-slate-700 hover:text-slate-900 hover:bg-slate-50"
+              }`}
+            >
+              <Briefcase className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+              <span>See How It Works</span>
+            </a>
           </div>
         </motion.div>
 
@@ -320,7 +299,7 @@ export default function LandingScreen({ onStartOnboarding, onLoadDemo, isDarkMod
         </motion.div>
 
         {/* Product Capabilities Matrix */}
-        <section className="mt-24 w-full">
+        <section id="features" className="mt-24 w-full">
           <div className="text-center space-y-3 mb-12">
             <h3 className={`text-2xl md:text-4xl font-extrabold ${isDarkMode ? "text-white" : "text-slate-900"}`}>
               End-To-End Core Modules
@@ -378,6 +357,60 @@ export default function LandingScreen({ onStartOnboarding, onLoadDemo, isDarkMod
           <p>© 2026 AI-SaaS Platform. Powered by Google Gemini AI & Adaptive Roadmaps.</p>
         </div>
       </footer>
+
+      {/* Auth Modal Overlay */}
+      <AnimatePresence>
+        {showAuthModal && (
+          <div 
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-xl px-4 overflow-y-auto py-10"
+            onClick={() => setShowAuthModal(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              onClick={(e) => e.stopPropagation()}
+              className={`w-full max-w-md border rounded-2xl relative shadow-2xl transition-all duration-300 ${
+                isDarkMode ? "bg-slate-900/90 border-slate-800 text-[#C9D1D9]" : "bg-white border-slate-200 text-slate-850"
+              }`}
+            >
+              {/* Close button */}
+              <button
+                onClick={() => setShowAuthModal(false)}
+                className={`absolute top-4 right-4 p-1.5 border rounded-lg transition-colors z-25 ${
+                  isDarkMode ? "bg-slate-950/60 border-slate-800 hover:border-slate-700 text-gray-400" : "bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-550"
+                }`}
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <SupabaseAuthView
+                isDarkMode={isDarkMode}
+                userProfile={userProfile}
+                results={results}
+                noWrapper={true}
+                onUpdateSession={(profile, results) => {
+                  onUpdateSession(profile, results);
+                  setShowAuthModal(false);
+                }}
+                onLoginAsGuest={(guestName) => {
+                  onLoginAsGuest(guestName);
+                  setShowAuthModal(false);
+                }}
+                onLogoutGuest={onLogoutGuest}
+                onNewUser={() => {
+                  setShowAuthModal(false);
+                  onNewUser();
+                }}
+                onLoginSuccess={(u) => {
+                  onLoginSuccess(u);
+                  setShowAuthModal(false);
+                }}
+              />
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
