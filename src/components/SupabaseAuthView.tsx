@@ -24,6 +24,8 @@ interface SupabaseAuthViewProps {
   onNewUser?: () => void;
   noWrapper?: boolean;
   onLoginSuccess?: (user: any) => void;
+  initialUsername?: string;
+  initialPassword?: string;
 }
 
 export default function SupabaseAuthView({ 
@@ -35,16 +37,30 @@ export default function SupabaseAuthView({
   onLogoutGuest, 
   onNewUser, 
   noWrapper = false,
-  onLoginSuccess
+  onLoginSuccess,
+  initialUsername = "",
+  initialPassword = ""
 }: SupabaseAuthViewProps) {
   const [user, setUser] = useState<any>(null);
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState(initialUsername);
+  const [password, setPassword] = useState(initialPassword);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
   const [syncLoading, setSyncLoading] = useState(false);
+
+  useEffect(() => {
+    setUsername(initialUsername);
+    setErrorMsg("");
+    setSuccessMsg("");
+  }, [initialUsername]);
+
+  useEffect(() => {
+    setPassword(initialPassword);
+    setErrorMsg("");
+    setSuccessMsg("");
+  }, [initialPassword]);
 
   useEffect(() => {
     // Seed local database users
