@@ -121,8 +121,8 @@ export default function App() {
       }
       const fileBase64 = btoa(binary);
 
-      // Call server to extract text
-      const resp = await fetch("/api/parse-resume", {
+      // Call server to extract text and prefill profile parameters
+      const resp = await fetch("/api/parse-resume-onboarding", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -135,12 +135,16 @@ export default function App() {
       if (!resp.ok) throw new Error("Server could not parse resume.");
       const data = await resp.json();
 
+      if (data.name) setName(data.name);
+      if (data.degree) setDegree(data.degree);
+      if (data.experienceLevel) setExperienceLevel(data.experienceLevel);
+      if (data.careerGoal) setCareerGoal(data.careerGoal);
+      if (data.knownSkills && Array.isArray(data.knownSkills)) setSkillsList(data.knownSkills);
+      if (data.extractedText) setResumeText(data.extractedText);
+
       if (data.warning) {
-        // No AI key - show warning, leave text area empty for manual paste
-        setResumeText("");
         setAnalysisError(data.warning);
       } else {
-        setResumeText(data.extractedText || "");
         setAnalysisError("");
       }
       setUploadState("success");
@@ -659,6 +663,14 @@ export default function App() {
           }}
           onLogoutGuest={handleSignOut}
           onNewUser={() => {
+            const guestUser = {
+              id: "guest-user",
+              email: "guest@skillmapper.local",
+              guest: true,
+              raw_user_meta_data: { name: "Guest Candidate" }
+            };
+            localStorage.setItem("skill_mapper_guest_user", JSON.stringify(guestUser));
+            setCurrentUser(guestUser);
             setIsOnboarding(true);
             setActiveTab("onboarding");
           }}
@@ -738,6 +750,22 @@ export default function App() {
                   setUserProfile(null);
                   setResults(null);
                   setActiveTab("landing");
+                }}
+                onNewUser={() => {
+                  const guestUser = {
+                    id: "guest-user",
+                    email: "guest@skillmapper.local",
+                    guest: true,
+                    raw_user_meta_data: { name: "Guest Candidate" }
+                  };
+                  localStorage.setItem("skill_mapper_guest_user", JSON.stringify(guestUser));
+                  setCurrentUser(guestUser);
+                  setIsOnboarding(true);
+                  setActiveTab("onboarding");
+                }}
+                onLoginSuccess={(loggedInUser) => {
+                  setCurrentUser(loggedInUser);
+                  checkAndPullProfile(loggedInUser);
                 }}
               />
             </div>
