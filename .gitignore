@@ -13,3 +13,8 @@ local.db-journal
 *.db
 *.db-journal
 
+# Video generator and brag artifacts
+*brag*
+brag/
+brag-output/
+share-copy.txt

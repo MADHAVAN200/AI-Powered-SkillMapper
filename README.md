@@ -1,5 +1,16 @@
 # AI-Powered SkillMapper
 
+
+<div align="center">
+
+[![SkillMapper Platform Walkthrough](./demo.gif)](./demo.mp4)
+
+<p align="center">
+  <a href="./demo.mp4"><strong>Watch High-Definition Video Walkthrough (demo.mp4)</strong></a>
+</p>
+
+</div>
+
 ## Your Intelligent Career Command Center
 
 **SkillMapper** is a premium, AI-driven career guidance platform designed to bridge the gap between academic potential and industry excellence. By leveraging state-of-the-art Large Language Models (LLMs) and a "Liquid Glass" UI aesthetic, SkillMapper provides users with a data-dense, interactive environment to navigate their professional growth.
